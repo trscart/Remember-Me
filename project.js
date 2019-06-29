@@ -6,12 +6,12 @@ module.exports = {
     alexaSkill: {
         nlu: 'alexa',
         manifest: {
-            permissions: [
-                {
-                    name: 'alexa::alerts:reminders:skill:readwrite',
-                }
-            ]
+          permissions: [
+            {
+              name: 'alexa::devices:all:geolocation:read'
+            }
+          ]
         }
-    },
+      },
     endpoint: '${JOVO_WEBHOOK_URL}',
 }

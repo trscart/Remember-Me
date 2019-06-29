@@ -7,11 +7,20 @@ module.exports = {
 
     intentMap: {
         'AMAZON.StopIntent': 'END',
+        'AMAZON.HelpIntent': 'HelpIntent'
     },
+
+    intentsToSkipUnhandled: [
+        'END'
+    ],
 
     db: {
         FileDb: {
             pathToFile: '../db/db.json',
         }
+    },
+
+    user: {
+        context: true,
     },
 };
