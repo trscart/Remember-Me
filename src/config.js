@@ -11,7 +11,8 @@ module.exports = {
     },
 
     intentsToSkipUnhandled: [
-        'END'
+        'END',
+        'RepeatIntent'
     ],
 
     db: {

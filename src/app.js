@@ -32,6 +32,7 @@ let user = {
 // exercise counter
 let intruderExerciseCount = 0
 let whereAmIExerciseCount = 0
+let skillCount = 0
 
 app.setHandler({
 
@@ -43,22 +44,32 @@ app.setHandler({
     },
 
     LAUNCH() {
-        console.log('LAUNCH');
+        console.log('LAUNCH ' + skillCount);
+        if (skillCount == 0) {
+            this.$speech.addText("Benvenuto in remember me! Con questa skill potrai prenderti cura di chiunque soffra della patologia di Alzheimer. Potrai impostare i promemoria per i farmaci, per controllare e guidare l'assistito nelle sue azioni quotidiane come la cura di se o la preparazione dei pasti. Inoltre saranno disponibili anche dei giochi cognitivi per tenere la memoria sempre in allenamento. Ora configureremo insieme la skill, per prima cosa dimmi come si chiama il l'assistito.");
+            this.followUpState('nameState')
+                .ask(this.$speech);
+            skillCount = 1
+        } else {
+            this.$speech.addText("Bentornato " + user.name + "! Vuoi fare qualche esercizio per la memoria?")
+            this.followUpState('exerciseState')
+                .ask(this.$speech)
+        }
+
         //this.$speech.addText("Benvenuto in remember me! Con questa skill potrai prenderti cura di chiunque soffra della patologia di Alzheimer. Potrai impostare i promemoria per i farmaci, per controllare e guidare l'assistito nelle sue azioni quotidiane come la cura di se o la preparazione dei pasti. Inoltre saranno disponibili anche dei giochi cognitivi per tenere la memoria sempre in allenamento. Ora configureremo insieme la skill, per prima cosa dimmi come si chiama il l'assistito.");
-        //this.followUpState('nameState')
-        //    .ask(this.$speech);
-        this.$speech.addText("Bentornato " + user.name + "! Vuoi fare qualche esercizio per la memoria?")
-        this.followUpState('exerciseState')
-            .ask(this.$speech)
+        //    this.followUpState('nameState')
+        //        .ask(this.$speech);
+
+        //this.$speech.addText("Bentornato " + user.name + "! Vuoi fare qualche esercizio per la memoria?")
+        //this.followUpState('exerciseState')
+        //    .ask(this.$speech)
+
+        //return this.toStateIntent("pillsReminderState.pillsNameState" , "PillsNameIntent")
     },
 
     RepeatIntent() { // repeat
         this.repeat();
     },
-
-    /*Unhandled() {
-        this.tell('bam');
-    },*/
 
     async AddReminderIntent() {
         let date = new Date()
@@ -161,14 +172,14 @@ app.setHandler({
 
         pillsTimeState: {
             Unhandled() {
-                this.$speech.addText('Per favore dimmi un orario');
+                this.$speech.addText('Per favore dimmi a che ora vuoi che gli ricordi il farmaco');
                 this.followUpState('pillsReminderState.pillsTimeState')
                     .ask(this.$speech);
             },
 
             PillsTimeIntent() {
                 console.log(this.$inputs)
-                this.$speech.addText("Bene! " + user.name + " prende altri farmaci?");
+                this.$speech.addText("Bene, glielo ricorderò ogni giorno alle " + this.$inputs.time.key + "! " + user.name + " prende altri farmaci?");
                 this.$reprompt.addText('Per favore rispondi si o no');
                 this.followUpState('pillsReminderState.otherPillsState')
                     .ask(this.$speech, this.$reprompt);
@@ -176,8 +187,14 @@ app.setHandler({
         },
 
         otherPillsState: {
+            Unhandled() {
+                this.$speech.addText('Per favore rispondi si o no');
+                this.followUpState('pillsReminderState.otherPillsState')
+                    .ask(this.$speech);
+            },
+
             YesIntent() {
-                this.$speech.addText("Allora dimmi il nome del farmaco");
+                this.$speech.addText("Dimmi il nome del farmaco");
                 this.$reprompt.addText('Per favore dimmi il nome del farmaco');
                 this.followUpState('pillsReminderState.pillsNameState')
                     .ask(this.$speech, this.$reprompt);
@@ -397,9 +414,7 @@ app.setHandler({
                 let day = days[date.getDay()]
 
                 if (this.$inputs.day.key == day) {
-                    this.$speech.addText("Risposta esatta! Hai completato tutto l'esercizio correttamente. Quando vuoi tornare a giocare io sono qui, a presto" + user.name);
-                    this.followUpState('intruderRetryState')
-                        .ask(this.$speech, this.$reprompt);
+                    this.tell("Risposta esatta! Hai completato tutto l'esercizio correttamente. Quando vuoi tornare a giocare io sono qui, a presto" + user.name);
                 } else {
                     this.$speech.addText("Risposta sbagliata, peccato! Vuoi riprovare?");
                     this.followUpState('whereAmIRetryState')
@@ -421,7 +436,7 @@ app.setHandler({
         },
 
         NoIntent() {
-            this.tell("Bene! Quando vuoi tornare a giocare io sono qui, a presto" + user.name)
+            this.tell("Bene! Quando vuoi tornare a giocare io sono qui, a presto " + user.name)
             whereAmIExerciseCount = 0
         }
     },
