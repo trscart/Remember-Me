@@ -23,13 +23,15 @@ app.use(
 // ------------------------------------------------------------------
 
 let user = {
-    name: "",
+    name: "Umberto",
     pills: { active: false, pillsName: [] },
     dailyReminder: false,
     exercises: false
 }
 
+// exercise counter
 let intruderExerciseCount = 0
+let whereAmIExerciseCount = 0
 
 app.setHandler({
 
@@ -42,10 +44,12 @@ app.setHandler({
 
     LAUNCH() {
         console.log('LAUNCH');
-        this.$speech.addText("Benvenuto in remember me! Con questa skill potrai prenderti cura di chiunque soffra della patologia di Alzheimer. Potrai impostare i promemoria per i farmaci, per controllare e guidare l'assistito nelle sue azioni quotidiane come la cura di se o la preparazione dei pasti. Inoltre saranno disponibili anche dei giochi cognitivi per tenere la memoria sempre in allenamento. Ora configureremo insieme la skill, per prima cosa dimmi come si chiama il l'assistito.");
-        this.followUpState('nameState')
-            .ask(this.$speech);
-        //this.ask("ciao, vuoi fare qualche esercizio per la memoria? O vuoi cambiare le impostazioni?")
+        //this.$speech.addText("Benvenuto in remember me! Con questa skill potrai prenderti cura di chiunque soffra della patologia di Alzheimer. Potrai impostare i promemoria per i farmaci, per controllare e guidare l'assistito nelle sue azioni quotidiane come la cura di se o la preparazione dei pasti. Inoltre saranno disponibili anche dei giochi cognitivi per tenere la memoria sempre in allenamento. Ora configureremo insieme la skill, per prima cosa dimmi come si chiama il l'assistito.");
+        //this.followUpState('nameState')
+        //    .ask(this.$speech);
+        this.$speech.addText("Bentornato " + user.name + "! Vuoi fare qualche esercizio per la memoria?")
+        this.followUpState('exerciseState')
+            .ask(this.$speech)
     },
 
     RepeatIntent() { // repeat
@@ -232,11 +236,25 @@ app.setHandler({
 
     /* exercises region */
 
-    ChooseExerciseIntent() {
-        this.$speech.addText("Che esercizio vuoi fare tra 'dove mi trovo', 'l'intruso', 'la definizione' o, 'cosa ci si può fare'.");
-        this.$reprompt.addText("Per favore scegli tra 'dove mi trovo', 'l'intruso', 'la definizione' o, 'cosa ci si può fare'.");
-        this.followUpState('exerciseChoiceState')
-            .ask(this.$speech, this.$reprompt);
+    exerciseState: {
+        Unhandled() {
+            this.$speech.addText("Per favore rispondi si o no?");
+            this.followUpState('exerciseState')
+                .ask(this.$speech);
+        },
+
+        YesIntent() {
+            this.$speech.addText("Che esercizio vuoi fare tra 'dove mi trovo', 'l'intruso' o 'la definizione'.");
+            this.$reprompt.addText("Per favore scegli tra 'dove mi trovo', 'l'intruso' o 'la definizione'.");
+            this.followUpState('exerciseChoiceState')
+                .ask(this.$speech, this.$reprompt);
+        },
+
+        NoIntent() {
+            /*this.$speech.addText("Va bene. Vorresti cambiare le impostazioni dei promemoria?");
+            this.followUpState('exerciseChoiceState')
+                .ask(this.$speech, this.$reprompt);*/
+        }
     },
 
     exerciseChoiceState: {
@@ -271,7 +289,6 @@ app.setHandler({
             this.followUpState('intruderCheckState')
                 .ask(this.$speech);
         }
-
     },
 
     intruderCheckState: {
@@ -289,21 +306,128 @@ app.setHandler({
     },
 
     intruderRetryState: {
+        Unhandled() {
+            this.$speech.addText("Per favore rispondi si o no.");
+            this.followUpState('intruderRetryState')
+                .ask(this.$speech);
+        },
+
         YesIntent() {
             return this.toStatelessIntent('IntruderExerciseIntent')
         },
+
         NoIntent() {
             this.tell("Bene! Quando vuoi tornare a giocare io sono qui, a presto" + user.name)
             intruderExerciseCount = 0
         }
     },
 
-    DefinitionExerciseIntent() {
-        this.tell('definizione')
+    WhereAmIExerciseIntent() {
+        if (whereAmIExerciseCount == 0) {
+            this.$speech.addText("Benvenuto nell'esercizio 'dove mi trovo'. Dovrai cercare di collocarti nello spazio e nel tempo, rispondendo alle mie prossime domande. Bene cominciamo. In che stato ti trovi?");
+            this.followUpState('whereCheckState.countryCheckState')
+                .ask(this.$speech);
+            whereAmIExerciseCount = 1
+        } else {
+            this.$speech.addText("Bene, ricominciamo. " + user.name + " in che stato ti trovi?");
+            this.followUpState('whereCheckState.countryCheckState')
+                .ask(this.$speech);
+        }
     },
 
-    WhereAmIExerciseIntent() {
-        this.tell('dove mi trovo')
+    whereCheckState: {
+        Unhandled() {
+            this.$speech.addText("Risposta sbagliata, peccato! Vuoi riprovare?");
+            this.followUpState('whereAmIRetryState')
+                .ask(this.$speech, this.$reprompt);
+        },
+
+        countryCheckState: {
+            Unhandled() {
+                this.$speech.addText("Risposta sbagliata, peccato! Vuoi riprovare?");
+                this.followUpState('whereAmIRetryState')
+                    .ask(this.$speech, this.$reprompt);
+            },
+
+            WhereCountryIntent() {
+                console.log(this.$inputs)
+                if (this.$inputs.country.key == "italia") {
+                    this.$speech.addText("Risposta esatta, proseguiamo! In che città ti trovi?");
+                    this.followUpState('whereCheckState.cityCheckState')
+                        .ask(this.$speech, this.$reprompt);
+                } else {
+                    this.$speech.addText("Risposta sbagliata, peccato! Vuoi riprovare?");
+                    this.followUpState('whereAmIRetryState')
+                        .ask(this.$speech, this.$reprompt);
+                }
+            }
+        },
+
+        cityCheckState: {
+            Unhandled() {
+                this.$speech.addText("Risposta sbagliata, peccato! Vuoi riprovare?");
+                this.followUpState('whereAmIRetryState')
+                    .ask(this.$speech, this.$reprompt);
+            },
+
+            WhereCityIntent() {
+                console.log(this.$inputs)
+                if (this.$inputs.city.key == "roma") {
+                    this.$speech.addText("Risposta esatta! Ora passiamo all'ultima domanda. Che giorno della settimana è oggi?");
+                    this.followUpState('whereCheckState.dayCheckState')
+                        .ask(this.$speech, this.$reprompt);
+                } else {
+                    this.$speech.addText("Risposta sbagliata, peccato! Vuoi riprovare?");
+                    this.followUpState('whereAmIRetryState')
+                        .ask(this.$speech, this.$reprompt);
+                }
+            }
+        },
+
+        dayCheckState: {
+            Unhandled() {
+                this.$speech.addText("Risposta sbagliata, peccato! Vuoi riprovare?");
+                this.followUpState('whereAmIRetryState')
+                    .ask(this.$speech, this.$reprompt);
+            },
+
+            WhereDayIntent() {
+                let date = new Date();
+                let days = ["domenica", "lunedì", "martedì", "mercoledì", "giovedì", "venerdì", "sabato"];
+                let day = days[date.getDay()]
+
+                if (this.$inputs.day.key == day) {
+                    this.$speech.addText("Risposta esatta! Hai completato tutto l'esercizio correttamente. Quando vuoi tornare a giocare io sono qui, a presto" + user.name);
+                    this.followUpState('intruderRetryState')
+                        .ask(this.$speech, this.$reprompt);
+                } else {
+                    this.$speech.addText("Risposta sbagliata, peccato! Vuoi riprovare?");
+                    this.followUpState('whereAmIRetryState')
+                        .ask(this.$speech, this.$reprompt);
+                }
+            }
+        }
+    },
+
+    whereAmIRetryState: {
+        Unhandled() {
+            this.$speech.addText("Per favore rispondi si o no.");
+            this.followUpState('whereAmIRetryState')
+                .ask(this.$speech);
+        },
+
+        YesIntent() {
+            return this.toStatelessIntent('WhereAmIExerciseIntent')
+        },
+
+        NoIntent() {
+            this.tell("Bene! Quando vuoi tornare a giocare io sono qui, a presto" + user.name)
+            whereAmIExerciseCount = 0
+        }
+    },
+
+    DefinitionExerciseIntent() {
+        this.tell('definizione')
     }
 
     /* end exercises region */
