@@ -261,8 +261,8 @@ app.setHandler({
         },
 
         YesIntent() {
-            this.$speech.addText("Che esercizio vuoi fare tra 'dove mi trovo', 'l'intruso' o 'la definizione'.");
-            this.$reprompt.addText("Per favore scegli tra 'dove mi trovo', 'l'intruso' o 'la definizione'.");
+            this.$speech.addText("Che esercizio vuoi fare tra 'dove mi trovo' o 'l'intruso'.");
+            this.$reprompt.addText("Per favore scegli tra 'dove mi trovo' o 'l'intruso'.");
             this.followUpState('exerciseChoiceState')
                 .ask(this.$speech, this.$reprompt);
         },
@@ -276,7 +276,7 @@ app.setHandler({
 
     exerciseChoiceState: {
         Unhandled() {
-            this.$speech.addText("Per favore scegli tra 'dove mi trovo', 'l'intruso' o 'la definizione'.");
+            this.$speech.addText("Per favore scegli tra 'dove mi trovo' o 'l'intruso'.");
             this.followUpState('exerciseChoiceState')
                 .ask(this.$speech, this.$reprompt);
         },
@@ -301,7 +301,7 @@ app.setHandler({
             this.followUpState('intruderCheckState')
                 .ask(this.$speech);
             intruderExerciseCount = 1
-        } else {
+        } else if (intruderExerciseCount == 1) {
             this.$speech.addText("Bene, ecco le parole. " + txtWords + ". Qual è l'intruso?");
             this.followUpState('intruderCheckState')
                 .ask(this.$speech);
@@ -414,7 +414,7 @@ app.setHandler({
                 let day = days[date.getDay()]
 
                 if (this.$inputs.day.key == day) {
-                    this.tell("Risposta esatta! Hai completato tutto l'esercizio correttamente. Quando vuoi tornare a giocare io sono qui, a presto" + user.name);
+                    this.tell("Risposta esatta! Hai completato tutto l'esercizio correttamente. Quando vuoi tornare a giocare io sono qui, a presto " + user.name);
                 } else {
                     this.$speech.addText("Risposta sbagliata, peccato! Vuoi riprovare?");
                     this.followUpState('whereAmIRetryState')
