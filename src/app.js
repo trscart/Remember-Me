@@ -439,7 +439,7 @@ app.setHandler({
             this.tell("Bene! Quando vuoi tornare a giocare io sono qui, a presto " + user.name)
             whereAmIExerciseCount = 0
         }
-    },
+    }, 
 
     DefinitionExerciseIntent() {
         this.tell('definizione')
